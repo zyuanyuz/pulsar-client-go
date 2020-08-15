@@ -366,6 +366,8 @@ func (pc *partitionConsumer) internalSeek(seek *seekRequest) {
 	if err != nil {
 		pc.log.WithError(err).Error("Failed to reset to message id")
 		seek.err = err
+	} else {
+		pc.clearMessageCh()
 	}
 }
 
@@ -400,6 +402,17 @@ func (pc *partitionConsumer) internalSeekByTime(seek *seekByTimeRequest) {
 	if err != nil {
 		pc.log.WithError(err).Error("Failed to reset to message publish time")
 		seek.err = err
+	} else {
+		pc.clearMessageCh()
+	}
+}
+
+func (pc *partitionConsumer) clearMessageCh() {
+label:
+	select {
+	case <-pc.messageCh:
+	default:
+		break label
 	}
 }
 
